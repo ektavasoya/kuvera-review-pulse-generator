@@ -1,0 +1,6 @@
+{
+  "name": "kuvera-review-pulse-generator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kuvera Weekly App Review Pulse Generator - turns app reviews into themes, a one-page note, and an email draft"
+}

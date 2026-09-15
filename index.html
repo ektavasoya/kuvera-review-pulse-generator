@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Review Pulse Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;900&family=Work+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAFAF8;
+    --surface: #FFFFFF;
+    --ink: #111111;
+    --ink-soft: #55554F;
+    --ink-faint: #9A968C;
+    --accent: #C4172C;
+    --accent-hover: #9E1122;
+    --accent-soft: #FBEAEA;
+    --line: #E4E1D8;
+    --radius-lg: 4px;
+    --radius-md: 3px;
+    --radius-sm: 2px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    max-width:1120px;
+    margin:0 auto;
+    padding:36px 20px 60px;
+  }
+  header{
+    margin-bottom:28px;
+    padding-bottom:22px;
+    border-bottom:3px solid var(--ink);
+  }
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 10px;
+    font-weight:600;
+  }
+  h1{
+    font-family:'Merriweather',serif;
+    font-size:clamp(28px,3.4vw,38px);
+    font-weight:800;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+    line-height:1.1;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:14.5px;
+    margin:0;
+    max-width:620px;
+    line-height:1.65;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:380px 1fr;
+    gap:0;
+    align-items:start;
+    border:1px solid var(--line);
+  }
+  @media (max-width:880px){ .layout{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--surface);
+    padding:24px;
+  }
+  .panel + .panel{border-left:1px solid var(--line);}
+  @media (max-width:880px){ .panel + .panel{border-left:none; border-top:1px solid var(--line);} }
+
+  .panel-title{
+    font-family:'Merriweather',serif;
+    font-size:17px;
+    font-weight:700;
+    margin:0 0 4px;
+  }
+  .panel-hint{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+    line-height:1.6;
+  }
+  textarea{
+    width:100%;
+    height:270px;
+    resize:vertical;
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:var(--ink);
+    background:var(--bg);
+  }
+  textarea::placeholder{color:var(--ink-faint);}
+  textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .btn-row{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;}
+  button{
+    font-family:'Work Sans',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border-radius:var(--radius-sm);
+    padding:11px 18px;
+    cursor:pointer;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+  }
+  .btn-primary:hover:not(:disabled){background:var(--accent-hover);}
+  .btn-primary:disabled{background:var(--ink-faint); cursor:not-allowed;}
+  .btn-secondary{
+    background:var(--surface);
+    color:var(--ink-soft);
+    border:1px solid var(--ink);
+  }
+  .btn-secondary:hover{background:var(--ink); color:#fff;}
+
+  .status{
+    margin-top:14px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Space Mono',monospace;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--accent); animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:.3;}50%{opacity:1;}}
+
+  .output-tabs{
+    display:flex;
+    gap:0;
+    margin-bottom:20px;
+    border-bottom:2px solid var(--ink);
+  }
+  .tab{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding:10px 16px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-2px;
+  }
+  .tab.active{color:var(--accent); border-bottom-color:var(--accent);}
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  .empty-state{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--ink-faint);
+    font-size:13px;
+    font-style:italic;
+  }
+
+  .theme-card{
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:16px;
+    margin-bottom:12px;
+    position:relative;
+  }
+  .theme-card .rank{
+    position:absolute;
+    top:-11px; left:14px;
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    font-weight:700;
+    color:#fff;
+    background:var(--accent);
+    padding:3px 9px;
+    border-radius:2px;
+  }
+  .theme-card h3{font-family:'Merriweather',serif; font-size:16px; margin:10px 0 8px; font-weight:700;}
+  .theme-card p{font-size:13px; color:var(--ink-soft); margin:0 0 10px; line-height:1.6;}
+  .theme-card blockquote{
+    margin:0;
+    padding:10px 14px;
+    background:var(--bg);
+    border-left:3px solid var(--accent);
+    font-size:12.5px;
+    font-style:italic;
+    color:var(--ink);
+  }
+  .theme-card .count{
+    font-family:'Space Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-faint);
+    margin-top:10px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+
+  .note-preview, .email-preview{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:24px;
+    font-size:13.5px;
+    line-height:1.75;
+    white-space:pre-wrap;
+    color:var(--ink);
+  }
+  .word-count{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-top:10px;
+    text-align:right;
+  }
+  .word-count.over{color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <p class="eyebrow">Kuvera · Internal Tool</p>
+    <h1>Weekly Review Pulse Generator</h1>
+    <p class="sub">Paste this week's App Store + Play Store reviews and generate the themes, one-page note, and email draft — automatically, every week.</p>
+  </header>
+
+  <div class="layout">
+    <div class="panel">
+      <p class="panel-title">Input</p>
+      <p class="panel-hint">CSV columns: rating, title, text, date, platform. No usernames/emails/IDs — this tool will also strip any it spots.</p>
+      <textarea id="csvInput" placeholder="Paste reviews CSV here, or load the sample dataset below..."></textarea>
+      <div class="btn-row">
+        <button class="btn-primary" id="generateBtn">Generate Weekly Pulse</button>
+        <button class="btn-secondary" id="loadSampleBtn">Load sample data</button>
+        <button class="btn-secondary" id="clearBtn">Clear</button>
+      </div>
+      <div class="status" id="statusRow" style="display:none;">
+        <span class="dot"></span><span id="statusText">Analyzing reviews…</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="output-tabs">
+        <div class="tab active" data-tab="themes">Theme Breakdown</div>
+        <div class="tab" data-tab="note">One-Page Note</div>
+        <div class="tab" data-tab="email">Email Draft</div>
+      </div>
+
+      <div class="tab-content active" id="tab-themes">
+        <div class="empty-state" id="emptyThemes">Generate a pulse to see the theme breakdown here.</div>
+        <div id="themesOutput"></div>
+      </div>
+
+      <div class="tab-content" id="tab-note">
+        <div class="empty-state" id="emptyNote">The one-page note will appear here after generating.</div>
+        <div id="noteOutput" style="display:none;">
+          <div class="note-preview" id="notePreviewText"></div>
+          <div class="word-count" id="wordCount"></div>
+          <div class="btn-row"><button class="btn-secondary" id="copyNoteBtn">Copy note</button></div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="tab-email">
+        <div class="empty-state" id="emptyEmail">The email draft will appear here after generating.</div>
+        <div id="emailOutput" style="display:none;">
+          <div class="email-preview" id="emailPreviewText"></div>
+          <div class="btn-row"><button class="btn-secondary" id="copyEmailBtn">Copy email draft</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLE_CSV = `rating,title,text,date,platform
+2,"Missing features after update","Can't see all funds of a category at a glance, the comparison graph is gone, managed account feature is no more and so many convenient things are gone. Time to switch to a new app.",2026-08-28,Play Store
+1,"Lost core features I relied on","After nearly a decade on this app, I am now reluctantly switching to another app. Lost Tax Harvesting, EPF tracking, and offline gold tracking after the redesign.",2026-08-20,App Store
+3,"Interface is harder to use now","Complex interface, small fonts, and navigation feels less intuitive than before the recent redesign.",2026-08-15,App Store
+2,"Sync completely broken since Feb","Since February 2026, mutual fund sync/import has completely stopped working. App only shows 'sync temporarily paused' with no resolution despite multiple support emails.",2026-06-19,App Store
+2,"Data getting mixed up between portfolios","This is getting worse. Money getting mixed up in portfolios, some portfolios are not even showing. Big problem with data migration. Why is there a new CAMS-based refresh button, this was never required earlier.",2026-06-25,App Store
+2,"Confused by external funds showing up","My other app's mutual funds also show in this app now, it is confusing to me. Please help me understand how to remove external mutual fund holdings from view.",2026-06-12,Customer care forum
+2,"New update forces unwanted data merge","New update forces aggregation of all investments from other platforms into one view, when I only want to see the investments I made through this app.",2026-07-10,App Store
+1,"Bug blocked my contact number and OTP","There's a bug that updated my contact number to an incorrect mobile number. Raised multiple tickets, not resolved in over a month. Cannot make new investments since I don't receive OTP.",2026-09-02,Play Store
+3,"Minor display bug on tablet","Orientation bug occurs on iPad when the on-screen keyboard is active; app layout breaks temporarily.",2026-08-10,App Store
+2,"Forced WhatsApp consent at every login","Login now requires WhatsApp consent at every attempt, adding friction to what used to be a one-tap login.",2026-07-29,Play Store
+1,"KYC document repeatedly rejected","Submitted a government-accepted 'One and Same Person' certificate for a name mismatch, but support kept rejecting it with generic replies despite it being accepted by tax authorities.",2026-08-05,App Store
+1,"Refund stuck for 2 months","Payment was deducted but order was not placed. Refund has been 'under process' for over two months with no resolution.",2026-07-18,Quora
+5,"Clean and simple, does what I need","Been a long-time user. Simple clean interface, easy to buy, redeem, set up a SIP, modify SIP, and get an overview of the portfolio.",2026-07-05,App Store`;
+
+const systemPrompt = `You are a Product Management analysis assistant. You will be given a CSV of app reviews (columns: rating, title, text, date, platform) for the Kuvera investing app.
+
+YOUR TASK - respond with ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:
+{
+  "themes": [
+    {
+      "name": "short theme name",
+      "description": "1 sentence describing the pattern",
+      "quote": "the single most representative real quote from the review text, verbatim, under 30 words",
+      "review_count": number of reviews in this theme,
+      "rank": 1-5 by combined severity and volume
+    }
+  ],
+  "one_page_note": "the full one-page weekly pulse as plain text with line breaks, following this exact structure: a title line, top 3 themes each with a 1-sentence description and one short quote, then 3 numbered action ideas. MUST be under 250 words total. Do not use markdown formatting symbols like # or **, just plain text with clear line breaks and numbering.",
+  "email_draft": "the same content as one_page_note, reformatted as a short professional email with a Subject line, greeting, body, and sign-off placeholder [Your name]."
+}
+
+RULES:
+1. Group reviews into at most 5 themes based on genuine repeated patterns - do not force 5 if fewer genuine patterns exist.
+2. Rank themes by a combination of how many reviews mention them AND how severe/business-critical they are (e.g. a bug blocking transactions outranks a minor UI gripe even with fewer mentions).
+3. Never include usernames, emails, phone numbers, or any other PII in any output field, even if present in the input data - strip or anonymize automatically.
+4. Quotes must be pulled verbatim from the provided review text field, not paraphrased, and under 30 words each.
+5. The one_page_note field must stay under 250 words - count carefully.
+6. Action ideas must be specific and actionable, not generic advice like "improve UX".
+7. If the input data is empty, malformed, or contains no analyzable reviews, return {"error": "explanation of what's wrong"} instead of the above shape.`;
+
+const csvInput = document.getElementById('csvInput');
+const generateBtn = document.getElementById('generateBtn');
+const loadSampleBtn = document.getElementById('loadSampleBtn');
+const clearBtn = document.getElementById('clearBtn');
+const statusRow = document.getElementById('statusRow');
+const statusText = document.getElementById('statusText');
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+loadSampleBtn.addEventListener('click', () => { csvInput.value = SAMPLE_CSV; });
+clearBtn.addEventListener('click', () => { csvInput.value = ''; });
+
+function renderThemes(themes){
+  const container = document.getElementById('themesOutput');
+  document.getElementById('emptyThemes').style.display = 'none';
+  container.innerHTML = '';
+  const sorted = [...themes].sort((a,b) => a.rank - b.rank);
+  sorted.forEach(t => {
+    const card = document.createElement('div');
+    card.className = 'theme-card';
+    card.innerHTML = `
+      <span class="rank">RANK ${t.rank}</span>
+      <h3>${t.name}</h3>
+      <p>${t.description}</p>
+      <blockquote>"${t.quote}"</blockquote>
+      <div class="count">${t.review_count} review(s) in this theme</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderNote(noteText){
+  document.getElementById('emptyNote').style.display = 'none';
+  document.getElementById('noteOutput').style.display = 'block';
+  document.getElementById('notePreviewText').textContent = noteText;
+  const wordCount = noteText.trim().split(/\s+/).length;
+  const wcEl = document.getElementById('wordCount');
+  wcEl.textContent = `${wordCount} words`;
+  wcEl.className = 'word-count' + (wordCount > 250 ? ' over' : '');
+}
+
+function renderEmail(emailText){
+  document.getElementById('emptyEmail').style.display = 'none';
+  document.getElementById('emailOutput').style.display = 'block';
+  document.getElementById('emailPreviewText').textContent = emailText;
+}
+
+function copyToClipboard(text, btnEl){
+  const originalLabel = btnEl.textContent;
+
+  function showCopied(success){
+    btnEl.textContent = success ? 'Copied!' : 'Copy failed — select manually';
+    setTimeout(() => { btnEl.textContent = originalLabel; }, 1800);
+  }
+
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(
+      () => showCopied(true),
+      () => fallbackCopy(text, showCopied)
+    );
+  } else {
+    fallbackCopy(text, showCopied);
+  }
+}
+
+function fallbackCopy(text, callback){
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const success = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    callback(success);
+  } catch(err){
+    callback(false);
+  }
+}
+
+document.getElementById('copyNoteBtn').addEventListener('click', (e) => {
+  copyToClipboard(document.getElementById('notePreviewText').textContent, e.target);
+});
+document.getElementById('copyEmailBtn').addEventListener('click', (e) => {
+  copyToClipboard(document.getElementById('emailPreviewText').textContent, e.target);
+});
+
+generateBtn.addEventListener('click', async () => {
+  const csv = csvInput.value.trim();
+  if(!csv){
+    alert('Please paste reviews CSV data first, or click "Load sample data".');
+    return;
+  }
+
+  generateBtn.disabled = true;
+  statusRow.style.display = 'flex';
+  statusText.textContent = 'Analyzing reviews and grouping themes…';
+
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: systemPrompt,
+        messages: [{ role: "user", content: csv }]
+      })
+    });
+    const data = await response.json();
+    const textBlock = (data.content || []).find(b => b.type === 'text');
+    let resultText = textBlock ? textBlock.text : '{}';
+    resultText = resultText.replace(/^```json\s*/i, '').replace(/```\s*$/,'').trim();
+
+    const result = JSON.parse(resultText);
+
+    if(result.error){
+      alert('Could not analyze this data: ' + result.error);
+      return;
+    }
+
+    renderThemes(result.themes);
+    renderNote(result.one_page_note);
+    renderEmail(result.email_draft);
+
+  } catch(err){
+    alert('Something went wrong generating the pulse. Please try again.');
+    console.error(err);
+  } finally {
+    generateBtn.disabled = false;
+    statusRow.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>
